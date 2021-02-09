@@ -1,0 +1,21 @@
+{
+  "name": "buff_authorizer",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.21.1",
+    "eslint": "^7.19.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-plugin-import": "^2.22.1",
+    "jimp": "^0.16.1",
+    "opencv-wasm": "^4.3.0-10",
+    "puppeteer": "^7.0.1"
+  }
+}
