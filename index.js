@@ -3,12 +3,12 @@ const axios = require('axios');
 
 const captchaSolver = require('./captchaSolver');
 
-function getBase64(url) {
+function getBuffer(url) {
   return axios
     .get(url, {
       responseType: 'arraybuffer',
     })
-    .then((response) => Buffer.from(response.data, 'binary').toString('base64'));
+    .then((response) => Buffer.from(response.data, 'binary'));
 }
 
 (async () => {
@@ -33,8 +33,8 @@ function getBase64(url) {
     try {
       const [yidun_bg_img] = await loginFrame.$$eval('.yidun_bg-img', (el) => el.map((x) => x.getAttribute('src')));
       const [yidun_jigsaw] = await loginFrame.$$eval('.yidun_jigsaw', (el) => el.map((x) => x.getAttribute('src')));
-      const captcha = await getBase64(yidun_bg_img);
-      const jigsaw = await getBase64(yidun_jigsaw);
+      const captcha = await getBuffer(yidun_bg_img);
+      const jigsaw = await getBuffer(yidun_jigsaw);
       const sliderHandle = await loginFrame.$('.yidun_control .yidun_slider');
       const handle = await sliderHandle.boundingBox();
       await page.mouse.move(handle.x + handle.width / 2, handle.y + handle.height / 2);

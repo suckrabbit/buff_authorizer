@@ -3,8 +3,8 @@ const Jimp = require('jimp');
 
 module.exports = async (captcha, jigsaw) => {
   try {
-    const imageSource = await Jimp.read(Buffer.from(captcha, 'base64'));
-    const imageTemplate = await Jimp.read(Buffer.from(jigsaw, 'base64'));
+    const imageSource = await Jimp.read(captcha);
+    const imageTemplate = await Jimp.read(jigsaw);
     const src = cv.matFromImageData(imageSource.bitmap);
     const templ = cv.matFromImageData(imageTemplate.bitmap);
     const dst = new cv.Mat();
