@@ -14,7 +14,6 @@ module.exports = async (captcha, jigsaw) => {
     const maxPoint = result.maxLoc;
     return maxPoint;
   } catch (err) {
-    console.log(cvTranslateError(cv, err));
-    return Promise.reject();
+    return Promise.reject(cvTranslateError(cv, err));
   }
 };
