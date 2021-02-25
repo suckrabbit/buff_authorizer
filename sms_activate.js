@@ -32,9 +32,9 @@ const getNumber = async () => {
 const getFullSms = (id) => axios.get(`${base_url}?api_key=${api_key}&action=getFullSms&id=${id}`)
   .then(({ data }) => {
     console.log('sms:', data);
-    const [key, value] = data.split(':');
+    const [key] = data.split(':');
     if (key === 'FULL_SMS') {
-      return value;
+      return data;
     }
     return null;
   });

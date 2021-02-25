@@ -14,14 +14,22 @@ const getAsyncItem = promisify(redisClient.get).bind(redisClient);
 const setAsyncItem = promisify(redisClient.set).bind(redisClient);
 const expireTime = 60 * 60 * 24 * 2;
 
+const getCookie = async (id) => {
+  try {
+    const data = await authorizer();
+    setAsyncItem(`buff_acc_cookie_${id}`, JSON.stringify({ status: 'done', data }), 'EX', expireTime);
+  } catch (error) {
+    console.log(error);
+    setAsyncItem(`buff_acc_cookie_${id}`, JSON.stringify({ status: 'done', data: { error: 'unexpected err' } }), 'EX', expireTime);
+  }
+};
+
 app.get('/create_acc', async (req, res) => {
   try {
     const id = nanoid();
     const status = 'proccesing';
     await setAsyncItem(`buff_acc_cookie_${id}`, JSON.stringify({ status }), 'EX', expireTime);
-    authorizer().then((cookie) => {
-      setAsyncItem(`buff_acc_cookie_${id}`, JSON.stringify({ status: 'done', data: cookie }), 'EX', expireTime);
-    });
+    getCookie(id);
     res.status(201).json({ id, status });
   } catch (error) {
     console.log(error);

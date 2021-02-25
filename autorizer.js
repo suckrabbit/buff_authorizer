@@ -14,6 +14,8 @@ function getBuffer(url) {
     .then((response) => Buffer.from(response.data, 'binary'));
 }
 
+const refetchSmsKey = 'refetch_sms';
+
 module.exports = async () => {
   const browser = await puppeteer.launch({
     headless: true,
@@ -70,7 +72,6 @@ module.exports = async () => {
   await loginFrame.$eval('.u-input input', (el, value) => el.value = value, number.value.substring(1)); // number
   await loginFrame.click('.pcbtn.f-fl');
   await page.waitForTimeout(3000);
-  console.log('######################');
   await page.screenshot({ path: 'status.png' });
   await sms_activate.setStatus(number.id, 1);
   const getCode = () => new Promise((resolve) => {
@@ -80,19 +81,30 @@ module.exports = async () => {
         // eslint-disable-next-line no-use-before-define
         clearInterval(timeout);
         clearInterval(interval);
-        resolve(sms);
+        console.log(sms);
+        const re = /\d{3,6}/i;
+        const code = sms.match(re);
+        console.log(code);
+        if (!code) {
+          resolve(refetchSmsKey);
+        }
+        resolve(code[0]);
       }
     }, 5000);
     const timeout = setTimeout(() => {
       clearInterval(interval);
       resolve(null);
-    }, 120000);
+    }, 60000);
   });
   const code = await getCode();
   sms_activate.setStatus(number.id, 8);
   if (!code) {
     await browser.close();
     return { error: 'cant get sms code' };
+  }
+  if (code === refetchSmsKey) {
+    console.log('нема кода');
+    // TODO перезапросить код
   }
   await loginFrame.$eval('input[name="phonecode"]', (el, value) => el.value = value, code); // code
   await loginFrame.click('.f-cb.loginbox .u-loginbtn');
@@ -105,6 +117,7 @@ module.exports = async () => {
   }
   await page.waitForSelector('.popup.popup_guide', { timeout: 2000 });
   await page.click('.popup.popup_guide a');
+  await page.waitForTimeout(3000);
   const cookies = await page.cookies();
   await browser.close();
   return { cookies };
