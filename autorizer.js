@@ -1,5 +1,6 @@
 /* eslint-disable no-param-reassign */
 /* eslint-disable no-return-assign */
+require('dotenv').config();
 const puppeteer = require('puppeteer');
 const axios = require('axios');
 
@@ -13,8 +14,6 @@ function getBuffer(url) {
     })
     .then((response) => Buffer.from(response.data, 'binary'));
 }
-
-const refetchSmsKey = 'refetch_sms';
 
 module.exports = async () => {
   const browser = await puppeteer.launch({
@@ -51,10 +50,8 @@ module.exports = async () => {
         { steps: 10 },
       );
       await page.mouse.up();
-      await page.screenshot({ path: 'captcha.png' });
       await loginFrame.waitForSelector('.yidun--success', { timeout: 2000 });
     } catch (error) {
-      console.log('try again');
       await captchaBypass();
     }
   };
@@ -70,41 +67,37 @@ module.exports = async () => {
 
   await page.click('.login-cont [id="agree-checkbox"] i');
   await loginFrame.$eval('.u-input input', (el, value) => el.value = value, number.value.substring(1)); // number
-  await loginFrame.click('.pcbtn.f-fl');
-  await page.waitForTimeout(3000);
-  await page.screenshot({ path: 'status.png' });
-  await sms_activate.setStatus(number.id, 1);
-  const getCode = () => new Promise((resolve) => {
-    const interval = setInterval(async () => {
-      const sms = await sms_activate.getFullSms(number.id);
-      if (sms) {
-        // eslint-disable-next-line no-use-before-define
-        clearInterval(timeout);
-        clearInterval(interval);
-        console.log(sms);
-        const re = /\d{3,6}/i;
-        const code = sms.match(re);
-        console.log(code);
-        if (!code) {
-          resolve(refetchSmsKey);
+  const getCode = async (refetch) => {
+    if (refetch) return null;
+    await loginFrame.click('.pcbtn.f-fl');
+    await page.waitForTimeout(3000);
+    await sms_activate.setStatus(number.id, 1);
+    return new Promise((resolve) => {
+      const interval = setInterval(async () => {
+        const sms = await sms_activate.getFullSms(number.id);
+        if (sms) {
+          // eslint-disable-next-line no-use-before-define
+          clearInterval(timeout);
+          clearInterval(interval);
+          const re = /\d{3,6}/i;
+          const code = sms.match(re);
+          if (!code) {
+            await getCode(true);
+          }
+          resolve(code[0]);
         }
-        resolve(code[0]);
-      }
-    }, 5000);
-    const timeout = setTimeout(() => {
-      clearInterval(interval);
-      resolve(null);
-    }, 60000);
-  });
+      }, 5000);
+      const timeout = setTimeout(() => {
+        clearInterval(interval);
+        resolve(null);
+      }, 60000);
+    });
+  };
   const code = await getCode();
   sms_activate.setStatus(number.id, 8);
   if (!code) {
     await browser.close();
     return { error: 'cant get sms code' };
-  }
-  if (code === refetchSmsKey) {
-    console.log('нема кода');
-    // TODO перезапросить код
   }
   await loginFrame.$eval('input[name="phonecode"]', (el, value) => el.value = value, code); // code
   await loginFrame.click('.f-cb.loginbox .u-loginbtn');
@@ -113,7 +106,7 @@ module.exports = async () => {
     await page.waitForSelector('.popup.popup_login .i_Btn.i_Btn_hollow', { timeout: 2000 });
     await page.click('.popup.popup_login .i_Btn.i_Btn_hollow');
   } catch (error) {
-    console.log('first block');
+    console.log('the first block is missing');
   }
   await page.waitForSelector('.popup.popup_guide', { timeout: 2000 });
   await page.click('.popup.popup_guide a');

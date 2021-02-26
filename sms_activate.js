@@ -1,4 +1,3 @@
-require('dotenv').config();
 const axios = require('axios');
 
 const api_key = process.env.API_KEY;
@@ -31,7 +30,6 @@ const getNumber = async () => {
 
 const getFullSms = (id) => axios.get(`${base_url}?api_key=${api_key}&action=getFullSms&id=${id}`)
   .then(({ data }) => {
-    console.log('sms:', data);
     const [key] = data.split(':');
     if (key === 'FULL_SMS') {
       return data;
