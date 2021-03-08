@@ -24,7 +24,7 @@ const getCookie = async (id) => {
   }
 };
 
-app.get('/create_acc', async (req, res) => {
+app.post('/create_acc', async (req, res) => {
   try {
     const id = nanoid();
     const status = 'proccesing';
